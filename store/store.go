@@ -2,11 +2,11 @@ package store
 
 import (
 	"fmt"
-	"github.com/new_web/config"
-	"time"
 	"github.com/go-redis/redis"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"github.com/sky/config"
+	"time"
 )
 
 //创建store 对象

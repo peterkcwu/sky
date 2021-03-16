@@ -1,15 +1,15 @@
 package api
 
 import (
-	"github.com/new_web/config"
-	"github.com/new_web/store"
+	"github.com/sky/config"
+	"github.com/sky/store"
 	"gopkg.in/resty.v1"
 )
 
 type ApiClient struct {
-	Conf           *config.Config
-	Store          *store.Store
-	RestyClient    *resty.Client
+	Conf        *config.Config
+	Store       *store.Store
+	RestyClient *resty.Client
 }
 
 func NewApiClient(conf *config.Config) (*ApiClient, error) {

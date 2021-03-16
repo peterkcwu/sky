@@ -1,4 +1,4 @@
-module github.com/new_web
+module github.com/sky
 
 go 1.14
 
