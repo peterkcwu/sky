@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/sky/api"
@@ -41,6 +43,11 @@ func Run(c *cli.Context) error {
 		server := gin.New()
 		// 加载日志中间件
 		server.Use(middleware.Logger())
+		//跨域
+		//server.Use(cors.New(GetCorsConfig()))
+
+		server.Use(static.Serve("/", static.LocalFile("./web/dist", false)))
+		//加載路由
 		client.LoadRouter(server)
 		srv := &http.Server{Addr: fmt.Sprintf("%s:%d", conf.ListenServer, conf.ListenPort), Handler: server}
 		defer func() {
@@ -85,4 +92,13 @@ func main() {
 //初始化全局配置
 func InitGlobal(conf *config.Config) {
 	config.ApiConf = conf
+}
+
+func GetCorsConfig() cors.Config {
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost:9091", "http://localhost:9529", "http://localhost:9528", "http://localhost:9527", "http://localhost"}
+	config.AllowMethods = []string{"POST", "GET", "OPTIONS", "PUT", "DELETE"}
+	config.AllowCredentials = true
+	config.AllowHeaders = []string{"x-requested-with", "Content-Type", "AccessToken", "X-CSRF-Token", "X-Token", "Authorization", "token"}
+	return config
 }
