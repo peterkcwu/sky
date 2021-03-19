@@ -15,7 +15,7 @@ func Logger() gin.HandlerFunc {
 		status := c.Writer.Status()
 		path := c.Request.URL.Path
 		contentType := c.ContentType()
-		staffName := c.GetString("Staffname")
-		logrus.WithFields(logrus.Fields{"user": staffName, "client": client, "path": path, "content_type": contentType, "status": status, "latency": latency}).Info("access")
+		//staffName := c.GetString("Staffname")
+		logrus.WithFields(logrus.Fields{"client": client, "path": path, "content_type": contentType, "status": status, "latency": latency}).Info("access")
 	}
 }
