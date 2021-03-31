@@ -13,12 +13,12 @@ type ApiClient struct {
 }
 
 func NewApiClient(conf *config.Config) (*ApiClient, error) {
-	//newStore, err := store.NewStore(conf)
-	//if err != nil {
-	//	return nil, err
-	//}
+	newStore, err := store.NewStore(conf)
+	if err != nil {
+		return nil, err
+	}
 	clientR := resty.New()
 	clientR.SetDebug(true)
-	return &ApiClient{Conf: conf, RestyClient: clientR}, nil
+	return &ApiClient{Conf: conf, RestyClient: clientR, Store: newStore}, nil
 
 }
