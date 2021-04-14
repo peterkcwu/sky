@@ -6,6 +6,6 @@ func (client *ApiClient) LoadRouter(server *gin.Engine) {
 	openRouter := server.Group("/api/v1")
 	{
 		openRouter.GET("/test", client.Hello)
-
+		openRouter.POST("/upload", client.FileUpload)
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/sky/api"
@@ -46,7 +45,9 @@ func Run(c *cli.Context) error {
 		//跨域
 		//server.Use(cors.New(GetCorsConfig()))
 
-		server.Use(static.Serve("/", static.LocalFile("./web/dist", false)))
+		//静态挂载页面
+		//server.Use(static.Serve("/", static.LocalFile(conf.StaticDir, false)))
+
 		//加載路由
 		client.LoadRouter(server)
 		srv := &http.Server{Addr: fmt.Sprintf("%s:%d", conf.ListenServer, conf.ListenPort), Handler: server}
