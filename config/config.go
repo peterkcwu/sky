@@ -13,6 +13,7 @@ type GlobalConfig struct {
 	LogReserveDay int
 	StaticDir     string
 	Domain        string
+	FilePath      string
 }
 
 type DBConfig struct {
@@ -49,8 +50,10 @@ func DefaultConfig() Config {
 		GlobalConfig: GlobalConfig{
 			ListenServer:  "",
 			ListenPort:    80,
+			StaticDir:     "/data/service/web/dist",
 			LogPath:       filepath.Join(baseDir, "../log/sky.log"),
 			LogReserveDay: 90,
+			FilePath:      "/data/file/img",
 		},
 	}
 }
