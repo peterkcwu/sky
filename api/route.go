@@ -7,5 +7,7 @@ func (client *ApiClient) LoadRouter(server *gin.Engine) {
 	{
 		openRouter.GET("/test", client.Hello)
 		openRouter.POST("/upload", client.FileUpload)
+		openRouter.POST("/upload_img", client.PhotoUpload)
+		openRouter.GET("/get_img", client.GetImg)
 	}
 }
