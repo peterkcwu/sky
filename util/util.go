@@ -1,6 +1,8 @@
 package util
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // 路径部分排序做目录
 func SortPath(str []byte) string {

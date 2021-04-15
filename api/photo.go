@@ -5,7 +5,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/laixhe/goimg/imghand"
+	"github.com/nfnt/resize"
 	"github.com/pkg/errors"
 	"github.com/sky/api/basic"
 	"github.com/sky/util"
@@ -14,6 +14,7 @@ import (
 	"image/png"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -140,9 +141,9 @@ func (client *ApiClient) PhotoUpload(c *gin.Context) {
 		}
 		defer file.Close()
 
-		if imgtype == imghand.PNG {
+		if imgtype == PNG {
 			err = png.Encode(file, img)
-		} else if imgtype == imghand.JPG || imgtype == imghand.JPEG {
+		} else if imgtype == JPG || imgtype == JPEG {
 			err = jpeg.Encode(file, img, nil)
 		}
 		if err != nil {
@@ -173,4 +174,165 @@ func IsType(str string) bool {
 	}
 
 	return false
+}
+
+func (client *ApiClient) GetImg(c *gin.Context) {
+	urlParse, ok := c.GetQuery("img")
+	if !ok {
+		basic.RespWithError(c, 400, "img id empty")
+	}
+	filePath := util.UrlParse(urlParse)
+	if filePath == "" {
+		basic.RespWithMsg(c, "img not found")
+		return
+	}
+	heightStr := c.DefaultQuery("h", "0")
+	widthStrr := c.DefaultQuery("w", "0")
+	height, _ := strconv.Atoi(heightStr)
+	width, _ := strconv.Atoi(widthStrr)
+	CutImage(c, filePath, width, height)
+
+}
+
+// 裁剪图像
+func CutImage(w *gin.Context, path string, width, height int) {
+
+	// 没有宽高，就是在加载原图像
+	if width == 0 && height == 0 {
+
+		file, err := os.Open(path)
+		if err != nil {
+			NoImage(w)
+			return
+		}
+		defer file.Close()
+
+		_, err = io.Copy(w.Writer, file)
+		if err != nil {
+			basic.RespWithErr(w, 400, errors.Wrap(err, "jpeg Encode error"))
+			return
+		}
+		return
+	}
+
+	// 裁剪图像 --------------------------------------
+
+	// 裁剪图像的组合路径
+	CutPath := fmt.Sprintf("%s_%d_%d", path, width, height)
+
+	// 判断是否存在裁剪图像
+	_, err := os.Stat(CutPath)
+	if err == nil {
+
+		file, err := os.Open(CutPath)
+		if err != nil {
+			NoImage(w)
+			return
+		}
+		defer file.Close()
+
+		_, err = io.Copy(w.Writer, file)
+		if err != nil {
+			basic.RespWithErr(w, 400, errors.Wrap(err, "jpeg Encode error"))
+			return
+		}
+		return
+	}
+
+	// 判断是否存在原图像
+	_, err = os.Stat(path)
+	if err != nil {
+		NoImage(w)
+		return
+	}
+
+	// 原图像
+	file, err := os.Open(path)
+	if err != nil {
+		NoImage(w)
+		return
+	}
+	defer file.Close()
+
+	// 图片解码 --------------------------------------
+
+	bufFile := bufio.NewReader(file)
+	img, imgtype, err := image.Decode(bufFile)
+	if err != nil {
+		NoImage(w)
+		return
+	}
+
+	// gif 图就不处理了
+	if imgtype == GIF {
+
+		_, err = file.Seek(0, 0)
+		if err != nil {
+			NoImage(w)
+			return
+		}
+
+		_, err = io.Copy(w.Writer, file)
+		if err != nil {
+			basic.RespWithErr(w, 400, errors.Wrap(err, "jpeg Encode error"))
+			return
+		}
+		return
+	}
+
+	if width > img.Bounds().Max.X {
+		width = img.Bounds().Max.X
+	}
+
+	if height > img.Bounds().Max.Y {
+		height = img.Bounds().Max.Y
+	}
+
+	// 进行裁剪
+	reimg := resize.Resize(uint(width), uint(height), img, resize.Lanczos3)
+	// 裁剪的存储
+	out, err := os.Create(CutPath)
+	if err != nil {
+		NoImage(w)
+		return
+	}
+	defer out.Close()
+
+	if imgtype == JPEG || imgtype == JPG {
+		err = jpeg.Encode(out, reimg, nil)
+		if err != nil {
+			basic.RespWithErr(w, 400, errors.Wrap(err, "jpeg Encode error"))
+			return
+		}
+	} else if imgtype == PNG {
+		err = png.Encode(out, reimg)
+		if err != nil {
+			basic.RespWithErr(w, 400, errors.Wrap(err, "png Encode error"))
+			return
+		}
+	}
+
+	_, err = out.Seek(0, 0)
+	if err != nil {
+		NoImage(w)
+		return
+	}
+
+	_, err = io.Copy(w.Writer, out)
+	if err != nil {
+		basic.RespWithErr(w, 400, errors.Wrap(err, "Copy error"))
+		return
+	}
+
+}
+
+func NoImage(c *gin.Context) {
+
+	// 图片流方式输出
+	c.Header("Content-Type", "image/png")
+	// 进行图片的编码
+	err := png.Encode(c.Writer, util.NoImg)
+	if err != nil {
+		basic.RespWithErr(c, 400, err)
+	}
 }
